@@ -14,6 +14,7 @@ var _aura_t := 0.0
 var _atk_cd := 1.5
 var _model: Node3D
 var _aura_ring: MeshInstance3D
+var _aura_mat: StandardMaterial3D
 var _bar: Label3D
 
 func _ready() -> void:
@@ -35,6 +36,9 @@ func _ready() -> void:
 	_aura_ring.rotation_degrees.x = 90.0
 	_aura_ring.position.y = 0.08
 	_aura_ring.visible = false
+	_aura_mat = StandardMaterial3D.new()
+	_aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_aura_ring.material_override = _aura_mat
 	add_child(_aura_ring)
 	_bar = Label3D.new()
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -57,13 +61,10 @@ func _process(_d: float) -> void:
 	_aura_ring.visible = aura >= 0
 	if aura >= 0:
 		var aura_color: Color = Data.ELEMENT_COLOR.get(aura, Color.WHITE)
-		var aura_mat := StandardMaterial3D.new()
-		aura_mat.albedo_color = aura_color
-		aura_mat.emission_enabled = true
-		aura_mat.emission = aura_color
-		aura_mat.emission_energy_multiplier = 1.1
-		aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_aura_ring.material_override = aura_mat
+		_aura_mat.albedo_color = aura_color
+		_aura_mat.emission_enabled = true
+		_aura_mat.emission = aura_color
+		_aura_mat.emission_energy_multiplier = 1.1
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server() or dead: return
