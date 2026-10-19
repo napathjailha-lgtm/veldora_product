@@ -250,7 +250,7 @@ func _handle_player_input(delta: float) -> void:
 		player.flip_h = true
 	elif input_dir.x > 0.1:
 		player.flip_h = false
-	if Input.is_action_just_pressed("player_attack"):
+	if Input.is_key_pressed(KEY_SPACE) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_start_player_attack()
 	if Input.is_action_just_pressed("strike"):
 		auto_battle = not auto_battle
