@@ -138,7 +138,7 @@ func _process(delta: float) -> void:
 			var desired_global := target_node.global_position + side + Vector3(0, 0.55, 0)
 			follow_target = to_local(desired_global)
 			if toward.length() > 0.1:
-				_pet.look_at(Vector3(toward.x, 0, toward.z) + _pet.global_position, Vector3.UP)
+				_pet.look_at(target_node.global_position, Vector3.UP)
 		_pet.position = _pet.position.lerp(follow_target, 1.0 - exp(-6.0 * delta))
 
 func _find_enemy_by_id(id: String) -> Enemy:
@@ -378,7 +378,7 @@ func fx_attack(kind: String, dir: Vector3, el: int) -> void:
 	mat.emission_enabled = true; mat.emission = mat.albedo_color
 	mi.material_override = mat
 	get_parent().add_child(mi)
-	mi.global_position = global_position + Vector3(0, 1.0, 0) + dir * 1.6
+	mi.global_position = _pet.global_position + Vector3(0, 0.7, 0) + dir * 0.9
 	var tw := mi.create_tween()
 	tw.tween_property(mi, "scale", Vector3.ONE * 2.2, 0.25)
 	tw.tween_callback(mi.queue_free)
