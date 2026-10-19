@@ -252,7 +252,7 @@ func _handle_player_input(delta: float) -> void:
 func _update_partner(delta: float) -> void:
 	var follow := player.position + Vector2(43 if not player.flip_h else -43, 26)
 	if auto_battle and is_instance_valid(pet_target) and not pet_target.get_meta("dead", false):
-		var direction := pet_target.position - pet.position
+		var direction: Vector2 = pet_target.position - pet.position
 		if direction.length() > ATTACK_RANGE * 0.65:
 			pet.position += direction.normalized() * 150.0 * delta
 			pet.flip_h = direction.x < 0.0
@@ -278,7 +278,7 @@ func _update_enemies(delta: float) -> void:
 			focus = pet.position
 		var dist: float = enemy.position.distance_to(focus)
 		if dist < 260.0 and dist > 84.0:
-			var direction := (focus - enemy.position).normalized()
+			var direction: Vector2 = (focus - enemy.position).normalized()
 			enemy.position += direction * ENEMY_SPEED * delta
 			enemy.z_index = int(enemy.position.y)
 		if dist < 72.0:
