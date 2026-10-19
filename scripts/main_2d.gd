@@ -227,8 +227,8 @@ func _process(delta: float) -> void:
 
 func _handle_player_input(delta: float) -> void:
 	var input_dir := Vector2.ZERO
-	input_dir.x = float(Input.is_action_pressed("move_right")) - float(Input.is_action_pressed("move_left"))
-	input_dir.y = float(Input.is_action_pressed("move_down")) - float(Input.is_action_pressed("move_up"))
+	input_dir.x = (1.0 if Input.is_action_pressed("move_right") else 0.0) - (1.0 if Input.is_action_pressed("move_left") else 0.0)
+	input_dir.y = (1.0 if Input.is_action_pressed("move_down") else 0.0) - (1.0 if Input.is_action_pressed("move_up") else 0.0)
 	if input_dir.length_squared() > 1.0:
 		input_dir = input_dir.normalized()
 	player.position += input_dir * PLAYER_SPEED * delta
@@ -254,8 +254,7 @@ func _update_partner(delta: float) -> void:
 	if auto_battle and is_instance_valid(pet_target) and not pet_target.get_meta("dead", false):
 		var direction := pet_target.position - pet.position
 		if direction.length() > ATTACK_RANGE * 0.65:
-			if direction.length() > ATTACK_RANGE * 0.65:
-				pet.position += direction.normalized() * 150.0 * delta
+			pet.position += direction.normalized() * 150.0 * delta
 			pet.flip_h = direction.x < 0.0
 		else:
 			follow = pet.position
@@ -273,17 +272,25 @@ func _update_enemies(delta: float) -> void:
 			continue
 		if enemy.get_meta("dead", false):
 			continue
-		var dist: float = enemy.position.distance_to(player.position)
+		var focus := player.position
+		var hitting_partner := auto_battle and pet.position.distance_to(enemy.position) < 220.0
+		if hitting_partner:
+			focus = pet.position
+		var dist: float = enemy.position.distance_to(focus)
 		if dist < 260.0 and dist > 84.0:
-			var direction := (player.position - enemy.position).normalized()
+			var direction := (focus - enemy.position).normalized()
 			enemy.position += direction * ENEMY_SPEED * delta
 			enemy.z_index = int(enemy.position.y)
 		if dist < 72.0:
 			enemy.set_meta("contact_time", float(enemy.get_meta("contact_time", 0.0)) + delta)
 			if float(enemy.get_meta("contact_time")) >= 1.7:
 				enemy.set_meta("contact_time", 0.0)
-				player_hp = maxf(0.0, player_hp - 4.0)
-				_say("มอนสเตอร์โจมตีผู้ฝึก!")
+				if hitting_partner:
+					partner_hp = maxf(0.0, partner_hp - 5.0)
+					_say("Embit ได้รับความเสียหาย!")
+				else:
+					player_hp = maxf(0.0, player_hp - 4.0)
+					_say("มอนสเตอร์โจมตีผู้ฝึก!")
 		else:
 			enemy.set_meta("contact_time", 0.0)
 
