@@ -26,7 +26,7 @@ var player_hp := 100.0
 var player_max_hp := 100.0
 var partner_hp := 100.0
 var partner_max_hp := 100.0
-var exp := 0
+var tamer_exp := 0
 var level := 1
 var attack_timer := 0.0
 var skill_timer := 0.0
@@ -334,9 +334,9 @@ func _damage_enemy(target: Node2D, damage: float, skill: bool) -> void:
 		_say("Embit ใช้ Ember Burst! -%d" % int(damage))
 	if hp <= 0.0:
 		target.set_meta("dead", true)
-		exp += 20
-		if exp >= level * 60:
-			exp -= level * 60
+		tamer_exp += 20
+		if tamer_exp >= level * 60:
+			tamer_exp -= level * 60
 			level += 1
 			_say("เลเวลอัป! Tamer Lv.%d" % level)
 		else:
