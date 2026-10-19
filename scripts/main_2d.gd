@@ -251,10 +251,11 @@ func _handle_player_input(delta: float) -> void:
 
 func _update_partner(delta: float) -> void:
 	var follow := player.position + Vector2(43 if not player.flip_h else -43, 26)
-	if auto_battle and is_instance_valid(pet_target) and pet_target.get("dead") != true:
+	if auto_battle and is_instance_valid(pet_target) and not pet_target.get_meta("dead", false):
 		var direction := pet_target.position - pet.position
 		if direction.length() > ATTACK_RANGE * 0.65:
-			follow = pet.position + direction.normalized() * minf(ENEMY_SPEED * 2.0 * delta, direction.length())
+			if direction.length() > ATTACK_RANGE * 0.65:
+				pet.position += direction.normalized() * 150.0 * delta
 			pet.flip_h = direction.x < 0.0
 		else:
 			follow = pet.position
@@ -270,7 +271,7 @@ func _update_enemies(delta: float) -> void:
 		if not is_instance_valid(enemy):
 			enemies.erase(enemy)
 			continue
-		if enemy.get("dead") == true:
+		if enemy.get_meta("dead", false):
 			continue
 		var dist: float = enemy.position.distance_to(player.position)
 		if dist < 260.0 and dist > 84.0:
@@ -291,7 +292,7 @@ func _update_combat(delta: float) -> void:
 	skill_timer = maxf(0.0, skill_timer - delta)
 	if not auto_battle:
 		return
-	if not is_instance_valid(pet_target) or pet_target.get("dead") == true:
+	if not is_instance_valid(pet_target) or pet_target.get_meta("dead", false):
 		pet_target = _nearest_enemy(460.0)
 		if not is_instance_valid(pet_target):
 			return
@@ -303,7 +304,7 @@ func _use_partner_skill() -> void:
 	if skill_timer > 0.0:
 		_say("สกิลคู่หูยังคูลดาวน์อยู่")
 		return
-	var target := pet_target if is_instance_valid(pet_target) and pet_target.get("dead") != true else _nearest_enemy(220.0)
+	var target := pet_target if is_instance_valid(pet_target) and not pet_target.get_meta("dead", false) else _nearest_enemy(220.0)
 	if not is_instance_valid(target):
 		_say("ไม่มีเป้าหมายในระยะสกิล")
 		return
@@ -322,7 +323,7 @@ func _use_partner_skill() -> void:
 	_damage_enemy(target, 28.0, true)
 
 func _damage_enemy(target: Node2D, damage: float, skill: bool) -> void:
-	if not is_instance_valid(target) or target.get("dead") == true:
+	if not is_instance_valid(target) or target.get_meta("dead", false):
 		return
 	var hp: float = float(target.get_meta("hp", 40.0)) - damage
 	target.set_meta("hp", hp)
@@ -332,7 +333,7 @@ func _damage_enemy(target: Node2D, damage: float, skill: bool) -> void:
 	if skill:
 		_say("Embit ใช้ Ember Burst! -%d" % int(damage))
 	if hp <= 0.0:
-		target.set("dead", true)
+		target.set_meta("dead", true)
 		exp += 20
 		if exp >= level * 60:
 			exp -= level * 60
@@ -350,7 +351,7 @@ func _nearest_enemy(max_distance: float) -> Node2D:
 	var best: Node2D
 	var best_dist := max_distance
 	for enemy in enemies:
-		if not is_instance_valid(enemy) or enemy.get("dead") == true:
+		if not is_instance_valid(enemy) or enemy.get_meta("dead", false):
 			continue
 		var d := pet.position.distance_to(enemy.position)
 		if d < best_dist:
@@ -364,7 +365,7 @@ func _update_spawns(delta: float) -> void:
 		return
 	spawn_timer = 5.0
 	for enemy in enemies:
-		if is_instance_valid(enemy) and enemy.get("dead") != true and enemy.position.distance_to(player.position) < 360.0:
+		if is_instance_valid(enemy) and not enemy.get_meta("dead", false) and enemy.position.distance_to(player.position) < 360.0:
 			return
 	if enemies.size() < MAX_ENEMIES:
 		var angle := randf() * TAU
@@ -377,7 +378,7 @@ func _spawn_enemy(pos: Vector2) -> void:
 	enemy.position = Vector2(clampf(pos.x, -720.0, 720.0), clampf(pos.y, -510.0, 510.0))
 	enemy.set_meta("hp", 40.0)
 	enemy.set_meta("contact_time", 0.0)
-	enemy.set("dead", false)
+	enemy.set_meta("dead", false)
 	var sprite := Sprite2D.new()
 	sprite.texture = ENEMY_TEXTURE
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -414,8 +415,6 @@ func _refresh_hud() -> void:
 	if not is_instance_valid(stats_label):
 		return
 	stats_label.text = "Tamer Lv.%d  •  EXP %d/%d" % [level, exp, level * 60]
-	var player_bar: ProgressBar = hud.get_node_or_null("Control/PanelContainer/VBoxContainer/VBoxContainer/PlayerBar")
-	var partner_bar: ProgressBar = hud.get_node_or_null("Control/PanelContainer/VBoxContainer/VBoxContainer2/PartnerBar")
 	# Update bars by their stable names to avoid brittle layout assumptions.
 	for bar in hud.find_children("*", "ProgressBar", true, false):
 		if bar.name == "player_bar":
