@@ -38,7 +38,7 @@ func _ready() -> void:
 	_log = Label.new(); _log.position = Vector2(12, 330)
 	root.add_child(_log)
 	var help := Label.new()
-	help.text = "WASD เดิน | J ฟัน | K สกิลมอน | 1-4 เลือกตัว | Q ร่างถัดไป | E กลับ Sprout\nR Bond Resonance | B/N เลือกกิ่ง | M ปลุก Resonance\nDebug: F1 EXP  F2 Bond  F3 ไอเทม  F4 ฆ่าตัวที่ใช้ (ทดสอบไข่)"
+	help.text = "WASD เดิน | J สั่งคู่หูต่อสู้อัตโนมัติ/หยุด | K สกิลคู่หู | 1-4 เลือกตัว | Q ร่างถัดไป | E กลับ Sprout\nR Bond Resonance | B/N เลือกกิ่ง | M ปลุก Resonance\nDebug: F1 EXP  F2 Bond  F3 ไอเทม  F4 ฆ่าตัวที่ใช้ (ทดสอบไข่)"
 	help.position = Vector2(12, 640)
 	help.modulate = Color(1, 1, 1, 0.75)
 	root.add_child(help)
