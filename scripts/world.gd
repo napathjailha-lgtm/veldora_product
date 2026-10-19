@@ -307,7 +307,7 @@ func _add_npc(npc_name: String, role: String, pos: Vector3, tunic_color: Color, 
 	var strap := _box(npc, Vector3(0.09, 0.55, 0.34), Vector3(0.12, 0.91, 0.02), accent)
 	strap.rotation_degrees.z = -18.0
 	var tag := Label3D.new()
-	tag.text = npc_name + "\\n" + role
+	tag.text = npc_name + "\n" + role
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.font_size = 25
 	tag.pixel_size = 0.005
