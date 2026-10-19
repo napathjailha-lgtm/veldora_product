@@ -3,18 +3,28 @@ extends Node2D
 ## The companion is the combatant; the tamer only moves and issues commands.
 
 const MAP_TEXTURE: Texture2D = preload("res://assets/2d/caldra_map.svg")
-const PLAYER_TEXTURE: Texture2D = preload("res://assets/2d/player.svg")
+const PLAYER_IDLE: Texture2D = preload("res://assets/2d/player_caldra_idle.svg")
+const PLAYER_WALK: Texture2D = preload("res://assets/2d/player_caldra_walk.svg")
+const PLAYER_RUN: Texture2D = preload("res://assets/2d/player_caldra_run.svg")
+const PLAYER_ATTACK: Texture2D = preload("res://assets/2d/player_caldra_attack.svg")
+const PLAYER_HURT: Texture2D = preload("res://assets/2d/player_caldra_hurt.svg")
 const PET_TEXTURE: Texture2D = preload("res://assets/2d/companion_fire.svg")
 const ENEMY_TEXTURE: Texture2D = preload("res://assets/2d/enemy_mushroom.svg")
 const NPC_TEXTURE: Texture2D = preload("res://assets/2d/npc.svg")
 
 const PLAYER_SPEED := 210.0
+const PLAYER_RUN_MULTIPLIER := 1.55
+const PLAYER_ATTACK_COOLDOWN := 0.42
 const PET_FOLLOW_SPEED := 7.0
 const ENEMY_SPEED := 54.0
 const ATTACK_RANGE := 94.0
 const MAX_ENEMIES := 7
 
 var player: Sprite2D
+var player_anim := "idle"
+var player_anim_timer := 0.0
+var player_attack_cooldown := 0.0
+var player_hurt_timer := 0.0
 var pet: Sprite2D
 var pet_label: Label
 var hud: CanvasLayer
@@ -54,11 +64,11 @@ func _build_world() -> void:
 func _build_player() -> void:
 	player = Sprite2D.new()
 	player.name = "Tamer"
-	player.texture = PLAYER_TEXTURE
+	player.texture = PLAYER_IDLE
 	player.position = Vector2(0, 150)
 	player.centered = true
 	player.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	player.scale = Vector2(1.2, 1.2)
+	player.scale = Vector2(1.0, 1.0)
 	add_child(player)
 	var shadow := _make_shadow(player, Vector2(0, 32), Vector2(23, 8))
 	shadow.z_index = -1
@@ -217,6 +227,7 @@ func _make_bar(label_text: String, color: Color, kind: String) -> Control:
 
 func _process(delta: float) -> void:
 	_handle_player_input(delta)
+	_update_player_animation(delta)
 	_update_partner(delta)
 	_update_enemies(delta)
 	_update_combat(delta)
@@ -231,13 +242,16 @@ func _handle_player_input(delta: float) -> void:
 	input_dir.y = (1.0 if Input.is_action_pressed("move_down") else 0.0) - (1.0 if Input.is_action_pressed("move_up") else 0.0)
 	if input_dir.length_squared() > 1.0:
 		input_dir = input_dir.normalized()
-	player.position += input_dir * PLAYER_SPEED * delta
+	var running := Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_CTRL)
+	player.position += input_dir * PLAYER_SPEED * (PLAYER_RUN_MULTIPLIER if running else 1.0) * delta
 	player.position.x = clampf(player.position.x, -700.0, 700.0)
 	player.position.y = clampf(player.position.y, -500.0, 500.0)
 	if input_dir.x < -0.1:
 		player.flip_h = true
 	elif input_dir.x > 0.1:
 		player.flip_h = false
+	if Input.is_action_just_pressed("player_attack"):
+		_start_player_attack()
 	if Input.is_action_just_pressed("strike"):
 		auto_battle = not auto_battle
 		if auto_battle:
@@ -248,6 +262,46 @@ func _handle_player_input(delta: float) -> void:
 			_say("คู่หูกลับมาติดตามคุณ")
 	if Input.is_action_just_pressed("skill"):
 		_use_partner_skill()
+
+func _start_player_attack() -> void:
+	if player_attack_cooldown > 0.0 or player_hurt_timer > 0.0:
+		return
+	player_attack_cooldown = PLAYER_ATTACK_COOLDOWN
+	player_anim = "attack"
+	player_anim_timer = 0.28
+	player.texture = PLAYER_ATTACK
+	var target := _nearest_enemy(105.0)
+	if is_instance_valid(target):
+		_damage_enemy(target, 6.0, false)
+		_say("ผู้ฝึกโจมตี! -6")
+
+func _update_player_animation(delta: float) -> void:
+	player_attack_cooldown = maxf(0.0, player_attack_cooldown - delta)
+	if player_anim_timer > 0.0:
+		player_anim_timer = maxf(0.0, player_anim_timer - delta)
+		if player_anim_timer <= 0.0:
+			player_anim = "idle"
+	if player_hurt_timer > 0.0:
+		player_hurt_timer = maxf(0.0, player_hurt_timer - delta)
+		player.texture = PLAYER_HURT
+	elif player_anim_timer > 0.0 and player_anim == "attack":
+		player.texture = PLAYER_ATTACK
+	else:
+		var moving := Input.is_action_pressed("move_right") or Input.is_action_pressed("move_left") or Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down")
+		if not moving:
+			player_anim = "idle"
+			player.texture = PLAYER_IDLE
+		elif Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_CTRL):
+			player_anim = "run"
+			player.texture = PLAYER_RUN
+		else:
+			player_anim = "walk"
+			player.texture = PLAYER_WALK
+
+func _trigger_player_hurt() -> void:
+	player_hurt_timer = 0.32
+	player_anim = "hurt"
+	player.texture = PLAYER_HURT
 
 func _update_partner(delta: float) -> void:
 	var follow := player.position + Vector2(43 if not player.flip_h else -43, 26)
@@ -290,6 +344,7 @@ func _update_enemies(delta: float) -> void:
 					_say("Embit ได้รับความเสียหาย!")
 				else:
 					player_hp = maxf(0.0, player_hp - 4.0)
+					_trigger_player_hurt()
 					_say("มอนสเตอร์โจมตีผู้ฝึก!")
 		else:
 			enemy.set_meta("contact_time", 0.0)
@@ -421,7 +476,7 @@ func _spawn_enemy(pos: Vector2) -> void:
 func _refresh_hud() -> void:
 	if not is_instance_valid(stats_label):
 		return
-	stats_label.text = "Tamer Lv.%d  •  EXP %d/%d" % [level, exp, level * 60]
+	stats_label.text = "Tamer Lv.%d  •  EXP %d/%d" % [level, tamer_exp, level * 60]
 	# Update bars by their stable names to avoid brittle layout assumptions.
 	for bar in hud.find_children("*", "ProgressBar", true, false):
 		if bar.name == "player_bar":
