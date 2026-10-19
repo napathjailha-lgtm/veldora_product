@@ -55,3 +55,14 @@ Debug (ปิดที่ `Net.debug_cheats`): F1 EXP, F2 Bond+Gauge เต็�
 2. Pyrrhael + บอส Trial of the Cold Anvil | จับมอนสเตอร์ป่า | Box/Care | กาชา
 3. เปลี่ยน procedural low-poly art เป็นโมเดล Blender/rig/แอนิเมชันจริงตามงบและเป้าหมายภาพ, ฟอนต์ไทยแบบ bundle (ถ้า export Web/มือถือ ต้องใส่ฟอนต์ไทยใน Theme เอง เช่น Noto Sans Thai)
 4. ย้ายข้อมูลจาก Dictionary เป็น Resource (.tres) เมื่อเนื้อหาเยอะขึ้น
+
+
+## 2D RO-inspired art prototype (branch `feature/ro-style-2d-sprites`)
+
+The default startup scene on this branch is now `scenes/main_2d.tscn`, a 2D-only 3/4-view Caldra prototype. It uses `Sprite2D` assets and `Camera2D`, not 3D meshes or a 3D camera. Controls: WASD to move, J or left mouse to toggle partner auto-battle, K to use the partner skill. The partner is the primary combatant.
+
+- Original temporary sprite art and map: `assets/2d/*.svg`.
+- Free CC0 pack source notes: `assets/2d/README.md`.
+- Optional Windows download helper for Kenney's CC0 RPG tiles: `tools/download_kenney_cc0.ps1`.
+
+**Prototype scope:** this is the first 2D visual/gameplay pass. The former multiplayer/party/evolution scripts are retained for reference, but multiplayer, persistent party state, full evolution UI, and quest interaction have not yet been ported to the new 2D scene. No deployment was performed. Godot was not available in the editing environment, so the project still needs to be opened and runtime-tested locally.
