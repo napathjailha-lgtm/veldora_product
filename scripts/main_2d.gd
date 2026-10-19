@@ -270,7 +270,7 @@ func _start_player_attack() -> void:
 	player_anim = "attack"
 	player_anim_timer = 0.28
 	player.texture = PLAYER_ATTACK
-	var target := _nearest_enemy(105.0)
+	var target := _nearest_player_enemy(105.0)
 	if is_instance_valid(target):
 		_damage_enemy(target, 6.0, false)
 		_say("ผู้ฝึกโจมตี! -6")
@@ -408,6 +408,18 @@ func _damage_enemy(target: Node2D, damage: float, skill: bool) -> void:
 		tw.tween_callback(target.queue_free)
 		if pet_target == target:
 			pet_target = null
+
+func _nearest_player_enemy(max_distance: float) -> Node2D:
+	var best: Node2D
+	var best_dist := max_distance
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.get_meta("dead", false):
+			continue
+		var d: float = player.position.distance_to(enemy.position)
+		if d < best_dist:
+			best = enemy
+			best_dist = d
+	return best
 
 func _nearest_enemy(max_distance: float) -> Node2D:
 	var best: Node2D
