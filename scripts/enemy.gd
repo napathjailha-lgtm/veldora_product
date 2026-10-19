@@ -1,5 +1,7 @@
 class_name Enemy
 extends CharacterBody3D
+
+const Visuals = preload("res://scripts/visuals.gd")
 ## มอนสเตอร์ป่า Caldra (AI รันบน server, client แค่รับตำแหน่ง/HP/ออร่า)
 
 var element: int = Data.Element.FIRE
@@ -10,7 +12,8 @@ var exp_reward := 40
 var dead := false
 var _aura_t := 0.0
 var _atk_cd := 1.5
-var _sprite: Sprite3D
+var _model: Node3D
+var _aura_ring: MeshInstance3D
 var _bar: Label3D
 
 func _ready() -> void:
@@ -19,15 +22,25 @@ func _ready() -> void:
 	var sh := SphereShape3D.new(); sh.radius = 0.5
 	col.shape = sh; col.position.y = 0.5
 	add_child(col)
-	_sprite = Sprite3D.new()
-	_sprite.texture = Data.blob(Data.ELEMENT_COLOR.get(element, Color.GRAY))
-	_sprite.pixel_size = 0.02
-	_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_sprite.position.y = 0.7
-	add_child(_sprite)
+	_model = Visuals.make_monster(element, 0)
+	_model.position.y = 0.02
+	add_child(_model)
+	_aura_ring = MeshInstance3D.new()
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.62
+	ring_mesh.outer_radius = 0.72
+	ring_mesh.rings = 8
+	ring_mesh.ring_segments = 16
+	_aura_ring.mesh = ring_mesh
+	_aura_ring.rotation_degrees.x = 90.0
+	_aura_ring.position.y = 0.08
+	_aura_ring.visible = false
+	add_child(_aura_ring)
 	_bar = Label3D.new()
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_bar.position.y = 1.7; _bar.font_size = 36; _bar.pixel_size = 0.005
+	_bar.position.y = 1.95
+	_bar.font_size = 34
+	_bar.pixel_size = 0.005
 	add_child(_bar)
 	var sync := MultiplayerSynchronizer.new()
 	sync.root_path = NodePath("..")
@@ -40,7 +53,17 @@ func _ready() -> void:
 func _process(_d: float) -> void:
 	var aura_name: String = "" if aura < 0 else " [%s]" % Data.Element.keys()[aura]
 	_bar.text = "%d/%d%s" % [maxi(0, int(hp)), int(max_hp), aura_name]
-	_sprite.modulate = Color.WHITE if aura < 0 else Color.WHITE.lerp(Data.ELEMENT_COLOR.get(aura, Color.WHITE), 0.6)
+	_model.scale = Vector3.ONE * (1.0 + 0.025 * sin(Time.get_ticks_msec() / 260.0))
+	_aura_ring.visible = aura >= 0
+	if aura >= 0:
+		var aura_color: Color = Data.ELEMENT_COLOR.get(aura, Color.WHITE)
+		var aura_mat := StandardMaterial3D.new()
+		aura_mat.albedo_color = aura_color
+		aura_mat.emission_enabled = true
+		aura_mat.emission = aura_color
+		aura_mat.emission_energy_multiplier = 1.1
+		aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_aura_ring.material_override = aura_mat
 
 func _physics_process(delta: float) -> void:
 	if not multiplayer.is_server() or dead: return
