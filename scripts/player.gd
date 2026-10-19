@@ -1,5 +1,7 @@
 class_name Player
 extends CharacterBody3D
+
+const Visuals = preload("res://scripts/visuals.gd")
 ## Tamer 1 คน = 1 โหนด (ชื่อโหนด = peer id)
 ## - client เจ้าของคุมการเดิน (sync ตำแหน่งผ่าน SyncMove)
 ## - server คุม Party/ต่อสู้/ไข่ (sync ร่างปัจจุบันผ่าน SyncState) แล้วส่ง snapshot ให้เจ้าของทุก 0.25 วิ
@@ -21,8 +23,8 @@ var facing := Vector3(0, 0, 1)
 var hud: HUD = null
 var logged_in := false
 var _profile := ""
-var _tamer: Sprite3D
-var _pet: Sprite3D
+var _tamer: Node3D
+var _pet: Node3D
 var _pet_label: Label3D
 var _last_form := "?"
 var _prev_pos := Vector3.ZERO
@@ -41,11 +43,17 @@ func _ready() -> void:
 	var cap := CapsuleShape3D.new(); cap.radius = 0.4; cap.height = 1.7
 	col.shape = cap; col.position.y = 0.85
 	add_child(col)
-	_tamer = _make_sprite(Color("4aa3ff"), 0.025, 1.0)
-	_pet = _make_sprite(Color.WHITE, 0.014, 0.7)
+	_tamer = Visuals.make_tamer()
+	_tamer.position.y = 0.0
+	add_child(_tamer)
+	_pet = Visuals.make_monster(Data.Element.FIRE, 0)
+	_pet.position = Vector3(0, 0.7, 0)
+	add_child(_pet)
 	_pet_label = Label3D.new()
 	_pet_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_pet_label.pixel_size = 0.005; _pet_label.font_size = 32; _pet_label.position.y = 1.1
+	_pet_label.pixel_size = 0.005
+	_pet_label.font_size = 30
+	_pet_label.position.y = 1.48
 	_pet.add_child(_pet_label)
 	var tag := Label3D.new()
 	tag.text = "P%d" % peer_id; tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -122,12 +130,23 @@ func _process(delta: float) -> void:
 
 func _refresh_pet() -> void:
 	_last_form = form_id
-	_pet.visible = Data.FORMS.has(form_id)
-	if not _pet.visible: return
+	if not Data.FORMS.has(form_id):
+		_pet.visible = false
+		return
 	var f: Dictionary = Data.FORMS[form_id]
-	_pet.texture = Data.blob(Data.ELEMENT_COLOR[Data.LINES[f["line"]]["element"]])
-	_pet.scale = Vector3.ONE * (1.0 + 0.4 * int(f["stage"]))
-	_pet_label.text = f["name"]
+	var element := int(Data.LINES[f["line"]]["element"])
+	var old_pos := _pet.position
+	_pet.queue_free()
+	_pet = Visuals.make_monster(element, int(f["stage"]))
+	_pet.position = old_pos
+	add_child(_pet)
+	_pet_label = Label3D.new()
+	_pet_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_pet_label.pixel_size = 0.005
+	_pet_label.font_size = 30
+	_pet_label.position.y = 1.48 + 0.18 * float(f["stage"])
+	_pet_label.text = str(f["name"])
+	_pet.add_child(_pet_label)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_local() or (hud and hud.quiz_open): return
