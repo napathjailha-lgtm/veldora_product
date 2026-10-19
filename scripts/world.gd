@@ -143,6 +143,7 @@ func _build_scenery() -> void:
 
 	_build_paths()
 	_build_town()
+	_build_npcs()
 	_build_forest()
 	_build_flora()
 
@@ -255,6 +256,66 @@ func _add_lamp(pos: Vector3) -> void:
 	cap.radius = 0.2
 	cap.height = 0.4
 	_add_mesh(lamp, cap, _mat(Color("ffce78"), true), Vector3(0, 1.72, 0))
+
+func _build_npcs() -> void:
+	# Named Caldra residents are visible landmarks; dialogue/quest interaction is a separate gameplay task.
+	_add_npc("Kaelen Vorr", "ช่างตีเหล็ก", Vector3(-3.45, 0.0, -3.6), Color("476c83"), Color("47352c"), Color("e8b35e"))
+	_add_npc("Tessa", "ผู้ดูแลไข่", Vector3(3.35, 0.0, -3.45), Color("6e8b5a"), Color("6a4038"), Color("d8d7a1"))
+	_add_npc("Pip", "นักสำรวจฝึกหัด", Vector3(0.0, 0.0, 4.25), Color("a96c45"), Color("4a3029"), Color("77d0cb"))
+
+func _add_npc(npc_name: String, role: String, pos: Vector3, tunic_color: Color, hair_color: Color, accent_color: Color) -> void:
+	var npc := Node3D.new()
+	npc.name = npc_name.replace(" ", "")
+	npc.position = pos
+	add_child(npc)
+	npc.add_to_group("npcs")
+	var skin := _mat(Color("dca982"))
+	var tunic := _mat(tunic_color)
+	var dark := _mat(Color("343746"))
+	var hair := _mat(hair_color)
+	var accent := _mat(accent_color)
+	var torso := CapsuleMesh.new()
+	torso.radius = 0.28
+	torso.height = 0.78
+	torso.radial_segments = 8
+	_add_mesh(npc, torso, tunic, Vector3(0, 0.88, 0))
+	var head := SphereMesh.new()
+	head.radius = 0.25
+	head.height = 0.5
+	head.radial_segments = 8
+	head.rings = 5
+	_add_mesh(npc, head, skin, Vector3(0, 1.48, 0))
+	var hair_mesh := SphereMesh.new()
+	hair_mesh.radius = 0.26
+	hair_mesh.height = 0.3
+	hair_mesh.radial_segments = 8
+	_add_mesh(npc, hair_mesh, hair, Vector3(0, 1.65, -0.035))
+	var leg := BoxMesh.new()
+	leg.size = Vector3(0.17, 0.36, 0.18)
+	_add_mesh(npc, leg, dark, Vector3(-0.14, 0.24, 0))
+	_add_mesh(npc, leg, dark, Vector3(0.14, 0.24, 0))
+	var arm := CapsuleMesh.new()
+	arm.radius = 0.09
+	arm.height = 0.42
+	arm.radial_segments = 6
+	var left_arm := _add_mesh(npc, arm, skin, Vector3(-0.34, 0.91, 0))
+	left_arm.rotation_degrees.z = -12.0
+	var right_arm := _add_mesh(npc, arm, skin, Vector3(0.34, 0.91, 0))
+	right_arm.rotation_degrees.z = 12.0
+	_box(npc, Vector3(0.3, 0.1, 0.32), Vector3(0, 1.15, 0), accent)
+	# A role-coloured shoulder strap helps distinguish residents at a glance.
+	var strap := _box(npc, Vector3(0.09, 0.55, 0.34), Vector3(0.12, 0.91, 0.02), accent)
+	strap.rotation_degrees.z = -18.0
+	var tag := Label3D.new()
+	tag.text = npc_name + "\\n" + role
+	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	tag.font_size = 25
+	tag.pixel_size = 0.005
+	tag.position = Vector3(0, 2.18, 0)
+	tag.modulate = Color("fff0cc")
+	tag.outline_size = 5
+	tag.no_depth_test = true
+	npc.add_child(tag)
 
 func _build_forest() -> void:
 	var rng := RandomNumberGenerator.new()
