@@ -29,6 +29,9 @@ var _pet_label: Label3D
 var _last_form := "?"
 var _prev_pos := Vector3.ZERO
 var _cd := {"strike": 0.0, "skill": 0.0}
+var combat_target_id := "" # Server-selected target, replicated to clients.
+var auto_battle := false
+var _auto_attack_t := 0.0
 var _sync_t := 0.0
 var _save_t := 0.0
 
@@ -60,7 +63,7 @@ func _ready() -> void:
 	tag.pixel_size = 0.006; tag.position.y = 2.1
 	add_child(tag)
 	_add_sync("SyncMove", [":position"], peer_id)      # เจ้าของส่งตำแหน่ง
-	_add_sync("SyncState", [":form_id"], 1)            # server ส่งร่างปัจจุบัน
+	_add_sync("SyncState", [":form_id", ":combat_target_id"], 1)            # server ส่งร่างปัจจุบัน
 	_prev_pos = position
 	if _is_local():
 		var cam := Camera3D.new()
@@ -125,8 +128,25 @@ func _process(delta: float) -> void:
 	_prev_pos = global_position
 	if form_id != _last_form: _refresh_pet()
 	if _pet.visible:
-		var target := -facing * 1.3 + Vector3(0, 0.7 * (0.9 + 0.1 * sin(Time.get_ticks_msec() / 250.0)), 0)
-		_pet.position = _pet.position.lerp(target, 1.0 - exp(-6.0 * delta))
+		var follow_target := -facing * 1.3 + Vector3(0, 0.7 * (0.9 + 0.1 * sin(Time.get_ticks_msec() / 250.0)), 0)
+		var target_node := _find_enemy_by_id(combat_target_id)
+		if target_node and not target_node.dead and not (hud and hud.quiz_open):
+			# The partner moves into the fight; the human stays back and never deals damage.
+			var toward := target_node.global_position - global_position
+			toward.y = 0.0
+			var side := Vector3(-toward.z, 0, toward.x).normalized() * 0.85
+			var desired_global := target_node.global_position + side + Vector3(0, 0.55, 0)
+			follow_target = to_local(desired_global)
+			if toward.length() > 0.1:
+				_pet.look_at(Vector3(toward.x, 0, toward.z) + _pet.global_position, Vector3.UP)
+		_pet.position = _pet.position.lerp(follow_target, 1.0 - exp(-6.0 * delta))
+
+func _find_enemy_by_id(id: String) -> Enemy:
+	if id == "": return null
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if node is Enemy and node.name == id:
+			return node
+	return null
 
 func _refresh_pet() -> void:
 	_last_form = form_id
@@ -153,7 +173,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _is_local() or (hud and hud.quiz_open): return
 	for a in ["strike", "skill"]:
 		if event.is_action_pressed(a):
-			_to_server("req_action", [a, facing])
+			if a == "strike":
+				_to_server("req_action", ["command_attack", null])
+			else:
+				_to_server("req_action", [a, facing])
 			return
 	for a in ACTIONS:
 		if event.is_action_pressed(a):
@@ -170,6 +193,7 @@ func _server_tick(delta: float) -> void:
 	var m := party.active_monster()
 	form_id = m.current_form if m else ""
 	if not logged_in: return
+	_auto_battle_tick(delta)
 	_sync_t += delta
 	if _sync_t >= 0.25 or not party.log.is_empty():
 		_sync_t = 0.0
@@ -201,7 +225,15 @@ func req_action(kind: String, arg: Variant) -> void:
 	var err := ""
 	var m := party.active_monster()
 	match kind:
-		"strike", "skill": _attack(kind, arg)
+		"command_attack":
+			auto_battle = not auto_battle
+			if auto_battle:
+				_select_nearest_target()
+				party.say("คู่หูเริ่มต่อสู้อัตโนมัติ" if combat_target_id != "" else "ไม่มีเป้าหมายใกล้ตัว")
+			else:
+				combat_target_id = ""
+				party.say("คู่หูหยุดต่อสู้และกลับมาติดตาม")
+		"skill": _attack(kind, arg)
 		"form_next": err = _cycle_form()
 		"form_sprout":
 			if m: err = party.request_switch(Data.LINES[m.line]["sprout"])
@@ -253,38 +285,71 @@ func _cycle_form() -> String:
 	forms.sort_custom(func(a, b): return m.stage_of(a) < m.stage_of(b))
 	return party.request_switch(forms[(forms.find(m.current_form) + 1) % forms.size()])
 
-func _attack(kind: String, dir_v: Variant) -> void:
+func _select_nearest_target() -> void:
+	var best: Enemy = null
+	var best_d := 12.0
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node is Enemy: continue
+		var enemy := node as Enemy
+		if enemy.dead: continue
+		var d := global_position.distance_to(enemy.global_position)
+		if d < best_d:
+			best = enemy
+			best_d = d
+	combat_target_id = best.name if best else ""
+
+func _auto_battle_tick(delta: float) -> void:
+	if party.in_safe_zone:
+		auto_battle = false
+		combat_target_id = ""
+		return
+	if not auto_battle: return
+	var target := _find_enemy_by_id(combat_target_id)
+	if target == null or target.dead:
+		_select_nearest_target()
+		target = _find_enemy_by_id(combat_target_id)
+	if target == null: return
+	_auto_attack_t -= delta
+	if global_position.distance_to(target.global_position) <= 3.1 and _auto_attack_t <= 0.0:
+		var mon := party.active_monster()
+		if mon == null: return
+		_auto_attack_t = 1.15
+		var result: Dictionary = target.take_hit(mon.atk(), -1)
+		party.enter_combat()
+		mon.style_atk += 1.0
+		if result["killed"]:
+			party.award_exp(target.exp_reward)
+			_select_nearest_target()
+
+func _attack(kind: String, _dir_v: Variant) -> void:
 	if party.in_safe_zone: return
 	var now := Time.get_ticks_msec() / 1000.0
 	if now < _cd[kind]: return
-	var dir := facing
-	if typeof(dir_v) == TYPE_VECTOR3 and (dir_v as Vector3).length() > 0.1:
-		dir = (dir_v as Vector3)
-		dir.y = 0.0
-		dir = dir.normalized()
-	var el := -1
-	var dmg := 9.0
-	var reach := 2.6
-	var m := party.active_monster()
-	_cd[kind] = now + 0.4
-	if kind == "skill":
-		if m == null:
-			party.say("ไม่มีมอนสเตอร์ที่ใช้งานได้"); return
-		el = m.element(); dmg = m.atk() * 1.2; reach = 5.0
-		_cd[kind] = now + 0.9
-	for e in get_tree().get_nodes_in_group("enemies"):
-		var to: Vector3 = e.global_position - global_position
-		to.y = 0.0
-		if e.dead or to.length() > reach: continue
-		if to.length() > 0.5 and to.normalized().dot(dir) < 0.3: continue
-		var res: Dictionary = e.take_hit(dmg, el)
-		if kind == "skill":
-			party.on_skill_hit(res["reaction"])
-		else:
-			party.on_tamer_hit()
-		if not res["reaction"].is_empty(): party.say("ปฏิกิริยา %s!" % res["reaction"]["name"])
-		if res["killed"]: party.award_exp(e.exp_reward)
-	fx_attack.rpc(kind, dir, el)
+	var mon := party.active_monster()
+	if mon == null:
+		party.say("ไม่มีคู่หูที่พร้อมต่อสู้")
+		return
+	var target := _find_enemy_by_id(combat_target_id)
+	if target == null or target.dead:
+		_select_nearest_target()
+		target = _find_enemy_by_id(combat_target_id)
+	if target == null:
+		party.say("เลือกเป้าหมายก่อน: กด J เพื่อสั่งคู่หูโจมตี")
+		return
+	if global_position.distance_to(target.global_position) > 8.0:
+		party.say("เป้าหมายอยู่ไกลเกินไป")
+		return
+	_cd[kind] = now + 0.9
+	var result: Dictionary = target.take_hit(mon.atk() * 1.2, mon.element())
+	party.on_skill_hit(result["reaction"])
+	if not result["reaction"].is_empty():
+		party.say("คู่หูใช้สกิล! ปฏิกิริยา %s!" % result["reaction"]["name"])
+	else:
+		party.say("%s ใช้สกิลโจมตี!" % Data.FORMS.get(mon.current_form, {}).get("name", "คู่หู"))
+	if result["killed"]:
+		party.award_exp(target.exp_reward)
+		_select_nearest_target()
+	fx_attack.rpc("skill", (target.global_position - global_position).normalized(), mon.element())
 
 func _cheat(what: String) -> void:
 	match what:
