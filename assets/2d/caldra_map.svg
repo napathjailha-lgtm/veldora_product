@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+<defs>
+ <pattern id="grass" width="96" height="56" patternUnits="userSpaceOnUse"><rect width="96" height="56" fill="#477d4b"/><path d="M0 28L48 0L96 28L48 56Z" fill="#54884e" stroke="#3c7044" stroke-width="1"/><path d="M18 23l4 -5m5 8l3 -4M67 34l4 -5m5 6l3 -4" stroke="#83ad61" stroke-width="2" stroke-linecap="round"/></pattern>
+ <pattern id="stone" width="64" height="36" patternUnits="userSpaceOnUse"><rect width="64" height="36" fill="#9d927c"/><path d="M0 18L32 0L64 18L32 36Z" fill="#b6a58b" stroke="#857966" stroke-width="1"/></pattern>
+ <g id="tree"><ellipse cx="0" cy="30" rx="34" ry="13" fill="#294b32" opacity=".4"/><path d="M-9 24L-7 -10L8 -10L10 24Z" fill="#76513a"/><circle cx="-15" cy="-18" r="25" fill="#2d673f"/><circle cx="13" cy="-28" r="29" fill="#347b47"/><circle cx="0" cy="-43" r="24" fill="#4b914e"/><circle cx="-22" cy="-28" r="10" fill="#6eaa58" opacity=".7"/></g>
+ <g id="house"><ellipse cx="0" cy="70" rx="67" ry="20" fill="#29452d" opacity=".4"/><path d="M-54 0L0 -31L54 0V57L0 86L-54 57Z" fill="#d7bc8c" stroke="#78553b" stroke-width="3"/><path d="M-65 -5L0 -55L65 -5L0 31Z" fill="#a95442" stroke="#6d3d34" stroke-width="4"/><path d="M0 31V86L54 57V0Z" fill="#b99467"/><path d="M-21 15V55L0 67V27Z" fill="#674330"/><path d="M-43 7L-25 -6L-25 14L-43 25Z" fill="#83c6cf" stroke="#78553b" stroke-width="3"/><path d="M15 8L34 -3L34 18L15 29Z" fill="#83c6cf" stroke="#78553b" stroke-width="3"/><path d="M-54 0L0 31L65 -5" fill="none" stroke="#e1a05e" stroke-width="4"/></g>
+ <g id="bush"><ellipse cx="0" cy="10" rx="26" ry="9" fill="#29452d" opacity=".35"/><circle cx="-13" cy="0" r="15" fill="#397544"/><circle cx="5" cy="-6" r="19" fill="#4e8d4a"/><circle cx="20" cy="1" r="13" fill="#2e683f"/><circle cx="-1" cy="-11" r="5" fill="#8db95d"/></g>
+</defs>
+<rect width="1600" height="1200" fill="url(#grass)"/>
+<!-- forest border -->
+<g opacity=".98">
+ <use href="#tree" x="90" y="95"/><use href="#tree" x="190" y="75"/><use href="#tree" x="300" y="120"/><use href="#tree" x="420" y="60"/><use href="#tree" x="540" y="95"/><use href="#tree" x="680" y="65"/><use href="#tree" x="810" y="110"/><use href="#tree" x="950" y="70"/><use href="#tree" x="1090" y="115"/><use href="#tree" x="1230" y="70"/><use href="#tree" x="1370" y="110"/><use href="#tree" x="1500" y="75"/>
+ <use href="#tree" x="80" y="1090"/><use href="#tree" x="190" y="1120"/><use href="#tree" x="310" y="1080"/><use href="#tree" x="440" y="1130"/><use href="#tree" x="570" y="1090"/><use href="#tree" x="700" y="1135"/><use href="#tree" x="850" y="1090"/><use href="#tree" x="990" y="1130"/><use href="#tree" x="1130" y="1085"/><use href="#tree" x="1280" y="1130"/><use href="#tree" x="1420" y="1080"/><use href="#tree" x="1530" y="1120"/>
+ <use href="#tree" x="65" y="260"/><use href="#tree" x="90" y="400"/><use href="#tree" x="60" y="550"/><use href="#tree" x="100" y="700"/><use href="#tree" x="70" y="850"/><use href="#tree" x="1530" y="250"/><use href="#tree" x="1500" y="390"/><use href="#tree" x="1540" y="540"/><use href="#tree" x="1500" y="700"/><use href="#tree" x="1530" y="850"/>
+</g>
+<!-- roads toward the plaza -->
+<path d="M710 1200L890 1200L855 760L745 760Z" fill="#8b785d" opacity=".8"/><path d="M730 1200L870 1200L835 760L765 760Z" fill="#b7a184"/>
+<path d="M0 570L0 690L510 665L510 595Z" fill="#8b785d" opacity=".8"/><path d="M0 588L0 670L510 650L510 610Z" fill="#b7a184"/>
+<path d="M1090 600L1600 560L1600 690L1090 665Z" fill="#8b785d" opacity=".8"/><path d="M1090 615L1600 585L1600 670L1090 650Z" fill="#b7a184"/>
+<!-- central plaza -->
+<path d="M800 380L1070 530L800 690L530 530Z" fill="#786c5c" opacity=".8"/><path d="M800 390L1050 530L800 675L550 530Z" fill="url(#stone)" stroke="#766b59" stroke-width="7"/>
+<path d="M800 420L995 530L800 640L605 530Z" fill="none" stroke="#d9c7a7" stroke-width="4" stroke-dasharray="12 8"/>
+<!-- fountain -->
+<ellipse cx="800" cy="536" rx="64" ry="35" fill="#5d574e"/><path d="M736 525L800 489L864 525L800 561Z" fill="#a9b9b1" stroke="#6b7776" stroke-width="4"/><path d="M750 524L800 496L850 524L800 552Z" fill="#53b8c8"/><path d="M785 506L800 470L815 506L800 523Z" fill="#b9fff2" stroke="#4eaaa7" stroke-width="3"/><circle cx="800" cy="514" r="5" fill="#fff4c2"/>
+<!-- houses around plaza -->
+<use href="#house" x="620" y="405"/><use href="#house" x="980" y="405"/><use href="#house" x="590" y="660"/><use href="#house" x="1010" y="660"/><use href="#house" x="800" y="310"/>
+<!-- garden patches -->
+<use href="#bush" x="420" y="370"/><use href="#bush" x="470" y="420"/><use href="#bush" x="1160" y="360"/><use href="#bush" x="1120" y="420"/><use href="#bush" x="420" y="740"/><use href="#bush" x="1160" y="760"/>
+<g fill="#f4d16e"><circle cx="340" cy="520" r="5"/><circle cx="355" cy="535" r="4"/><circle cx="1240" cy="515" r="5"/><circle cx="1260" cy="532" r="4"/><circle cx="470" cy="850" r="5"/><circle cx="1140" cy="850" r="5"/></g>
+<g fill="#e8a2a0"><circle cx="375" cy="545" r="5"/><circle cx="1225" cy="550" r="5"/><circle cx="450" cy="830" r="4"/><circle cx="1165" cy="830" r="4"/></g>
+<!-- stones -->
+<g fill="#7d8a77" stroke="#506b4d" stroke-width="3"><path d="M270 750l25 -22l28 12l8 25l-38 14Z"/><path d="M1320 420l23 -18l28 14l3 20l-32 13Z"/><path d="M1290 890l21 -15l22 10l4 20l-31 10Z"/></g>
+</svg>
