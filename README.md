@@ -1,7 +1,7 @@
 # Veldara: Bond of the Wild — Caldra Arc (Godot 4.3, 2.5D, Online Co-op)
 
 Prototype ที่ตรงกับเอกสารโปรเจกต์ v1.3 (ขอบเขต 1.0 = Caldra) ย้ายจาก Unity -> Godot
-โลก 3D + ตัวละคร/มอนสเตอร์เป็น billboard sprite (2.5D) ตอนนี้ใช้ภาพ placeholder (ก้อนกลมมีตา) แทนอาร์ต
+โลก 3D + มุมกล้อง 2.5D ใช้ procedural low-poly models สำหรับ Tamer/มอนสเตอร์ และฉากป่า-เมืองที่สร้างจาก mesh ภายใน Godot โดยไม่พึ่ง asset ภายนอก
 
 ## วิธีรัน
 1. เปิดด้วย **Godot 4.3+** (Standard ไม่ต้องใช้ .NET) -> Import `project.godot` -> F5
@@ -25,7 +25,8 @@ Debug (ปิดที่ `Net.debug_cheats`): F1 EXP, F2 Bond+Gauge เต็�
 | scripts/party.gd | ทีม 4 ตัว, EE, Bond Gauge, Cooldown, Stamina, ฟักไข่ตามเวลาจริง (ออฟไลน์ได้) |
 | scripts/player.gd | Tamer + RPC ทั้งหมด (server ตัดสิน, client ส่งคำสั่ง) |
 | scripts/enemy.gd | มอนสเตอร์ป่า, ออร่าธาตุ, ปฏิกิริยา (Steam / Wildfire / Swirl) |
-| scripts/world.gd | ฉาก Caldra placeholder, พื้นที่ปลอดภัย, spawner |
+| scripts/world.gd | เมือง Caldra, บ้าน, น้ำพุคริสตัล, ถนน, ป่า, ต้นไม้, ดอกไม้, พื้นที่ปลอดภัย, spawner |
+| scripts/visuals.gd | โมเดล low-poly ที่สร้างจาก mesh สำหรับ Tamer และมอนสเตอร์แต่ละธาตุ |
 | scripts/hud.gd, starter_quiz.gd | HUD และพิธีไข่ (เห็น % เปลี่ยนใจได้ก่อนยืนยัน) |
 
 ## สถาปัตยกรรมออนไลน์
@@ -45,5 +46,5 @@ Debug (ปิดที่ `Net.debug_cheats`): F1 EXP, F2 Bond+Gauge เต็�
 ## ยังไม่ทำ (ลำดับที่แนะนำ)
 1. เควสต์ Kaelen/Tessa/Pip + Trust Lv.1-5 (มีช่อง `story_flags` และ `hatch_locked` ของไข่ Pip รอไว้แล้ว)
 2. Pyrrhael + บอส Trial of the Cold Anvil | จับมอนสเตอร์ป่า | Box/Care | กาชา
-3. โมเดล/อาร์ตจริง, ฟอนต์ไทยแบบ bundle (ถ้า export Web/มือถือ ต้องใส่ฟอนต์ไทยใน Theme เอง เช่น Noto Sans Thai)
+3. เปลี่ยน procedural low-poly art เป็นโมเดล Blender/rig/แอนิเมชันจริงตามงบและเป้าหมายภาพ, ฟอนต์ไทยแบบ bundle (ถ้า export Web/มือถือ ต้องใส่ฟอนต์ไทยใน Theme เอง เช่น Noto Sans Thai)
 4. ย้ายข้อมูลจาก Dictionary เป็น Resource (.tres) เมื่อเนื้อหาเยอะขึ้น
