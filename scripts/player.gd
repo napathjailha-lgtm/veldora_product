@@ -136,6 +136,7 @@ func _refresh_pet() -> void:
 	var f: Dictionary = Data.FORMS[form_id]
 	var element := int(Data.LINES[f["line"]]["element"])
 	var old_pos := _pet.position
+	remove_child(_pet)
 	_pet.queue_free()
 	_pet = Visuals.make_monster(element, int(f["stage"]))
 	_pet.position = old_pos
